@@ -56,11 +56,14 @@ export const getImageById = async (req: Request, res: Response, next: NextFuncti
             res.status(404).json({ status: "error", message: "Image not found" });
             return;
         }
-        
+        const fullUrl = `${req.protocol}://${req.get("host")}${image.url}`;
         res.json({
             status: "success",
             message: "Image retrieved successfully",
-            data: image,
+            data: {
+                ...image,
+              fullUrl, // Tambahkan URL lengkap
+            },
         });
     } catch (error) {
         next(error);
