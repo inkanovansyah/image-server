@@ -5,19 +5,43 @@ import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 const SECRET_KEY = process.env.JWT_SECRET || "secret";
 
+// Tipe untuk data yang ada dalam token
+interface DecodedToken {
+  userId: string;
+}
+
 export const authMiddleware = async (req: Request, res: Response, next: NextFunction) => {
   const token = req.header("Authorization")?.split(" ")[1];
-  if (!token) return res.status(401).json({ message: "Access denied, no token provided" });
+  
+  // Jika token tidak ada
+  if (!token) {
+    return res.status(401).json({ message: "Access denied, no token provided" });
+  }
 
-     try {
-        const decoded = jwt.verify(token, SECRET_KEY) as { userId: string };
+  try {
+    // Verifikasi token JWT
+    const decoded = jwt.verify(token, SECRET_KEY) as DecodedToken;
 
-        const session = await prisma.loginSession.findUnique({ where: { token } });
-        if (!session) return res.status(401).json({ message: "Invalid session" });
+    // Cek apakah token ada dalam session
+    const session = await prisma.loginSession.findFirst({ where: { token } });
 
-        (req as any).user = decoded;
-        next();
-        } catch (err) {
-            res.status(401).json({ message: "Invalid token" });
+    // Jika session tidak ditemukan, token tidak valid
+    if (!session) {
+      return res.status(401).json({ message: "Invalid session" });
     }
+
+    // Menambahkan informasi user pada request object
+    (req as any).user = decoded;
+
+    // Melanjutkan ke middleware atau rute selanjutnya
+    next();
+
+  } catch (err) {
+    if (err instanceof jwt.TokenExpiredError) {
+      return res.status(401).json({ message: "Token expired" });
+    } else if (err instanceof jwt.JsonWebTokenError) {
+      return res.status(401).json({ message: "Invalid token" });
+    }
+    return res.status(500).json({ message: "Unknown error occurred" });
+  }
 };
