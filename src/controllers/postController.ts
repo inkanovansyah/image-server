@@ -4,14 +4,36 @@ import { Request, Response } from "express";
 const prisma = new PrismaClient();
 
 // GET all posts
-export const getAllPosts = async (_req: Request, res: Response): Promise<void> => {
+export const getAllPosts = async (req: Request, res: Response): Promise<void> => {
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 10;
+    const skip = (page - 1) * limit;
+  
     try {
-        const posts = await prisma.post.findMany();
-        res.json(posts);
+      const totalItems = await prisma.post.count();
+      const posts = await prisma.post.findMany({
+        skip,
+        take: limit,
+        orderBy: { createdAt: "desc" },
+      });
+  
+      res.json({
+        status: "success",
+        message: "Posts fetched successfully",
+        currentPage: page,
+        totalPages: Math.ceil(totalItems / limit),
+        totalItems,
+        data: posts,
+      });
     } catch (err) {
-        res.status(500).json({ message: "Failed to fetch posts", error: err });
+      res.status(500).json({
+        status: "error",
+        message: "Failed to fetch posts",
+        error: err,
+      });
     }
-};
+  };
+  
 
 // GET post by slug
 export const getPostBySlug = async (req: Request, res: Response): Promise<void> => {
@@ -52,7 +74,7 @@ export const createPost = async (
                  // penting: biar Prisma gak error kalau undefined
             },
         });
-        res.status(201).json({
+        res.status(200).json({
             status: "success",
             message: "Image uploaded successfully",
             data: post,
