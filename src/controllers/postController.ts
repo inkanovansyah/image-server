@@ -52,7 +52,11 @@ export const createPost = async (
                  // penting: biar Prisma gak error kalau undefined
             },
         });
-        res.status(201).json(post);
+        res.status(201).json({
+            status: "success",
+            message: "Image uploaded successfully",
+            data: post,
+          });
     } catch (err) {
         res.status(500).json({ message: "Failed to create post", error: err });
     }

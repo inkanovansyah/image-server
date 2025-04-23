@@ -10,9 +10,9 @@ import { authenticateToken  } from "../middleware/authMiddleware";
 
 const router = express.Router();
 
-router.get("get/allpost", getAllPosts);
-router.get("/:slug", getPostBySlug);
-router.post("/post",authenticateToken, createPost);
+router.get("/allpost", getAllPosts);
+router.get("search/:slug", getPostBySlug);
+router.post("/create",authenticateToken, createPost);
 router.put("/update/:slug",authenticateToken, updatePost);
 router.delete("/delete/:slug",authenticateToken, deletePost);
 
