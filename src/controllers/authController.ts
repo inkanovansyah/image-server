@@ -33,15 +33,15 @@ export const login = async (req: Request, res: Response): Promise<void> => {
     const { email, password } = req.body;
     const user = await prisma.user.findUnique({ where: { email } });
     if (!user) {
-        res.status(401).json({ message: "Invalid email or password" });
+        res.status(401).json({ message: "Invalid email" });
         return;
     }
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-        res.status(401).json({ message: "Invalid email or password" });
+        res.status(401).json({ message: "Invalid password" });
         return;
     }
-    const token = jwt.sign({ userId: user.id, email: user.email }, SECRET_KEY, { expiresIn: "1h" });
+    const token = jwt.sign({ userId: user.id, email: user.email }, SECRET_KEY, { expiresIn: "2h" });
     await prisma.loginSession.create({
         data: { userId: user.id, token },
     });
@@ -50,12 +50,12 @@ export const login = async (req: Request, res: Response): Promise<void> => {
         message: "Login successful",
         user: {
             id: user.id,
+            token, // ← token dimasukkan dalam objek user
             name: user.name,
             email: user.email,
             gender: user.gender,
             address: user.address,
             city: user.city,
-            token, // ← token dimasukkan dalam objek user
         },
     });
     } catch (err) {

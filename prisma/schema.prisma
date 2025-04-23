@@ -40,3 +40,14 @@ model LoginSession {
 
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
+
+model Post {
+  id        Int      @id @default(autoincrement())
+  title     String
+  slug      String   @unique
+  content   String
+  metaDesc  String
+  imageUrl  String?  // <--- untuk menyimpan URL gambar
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
